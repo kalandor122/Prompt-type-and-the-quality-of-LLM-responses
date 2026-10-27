@@ -1,0 +1,149 @@
+{
+ "n_runs": 654,
+ "arms": {
+  "A": {
+   "met": 1235,
+   "n": 1738,
+   "pct": 71.06,
+   "ci95": [
+    68.88,
+    73.14
+   ]
+  },
+  "B": {
+   "met": 1289,
+   "n": 1727,
+   "pct": 74.64,
+   "ci95": [
+    72.53,
+    76.63
+   ]
+  },
+  "C": {
+   "met": 1463,
+   "n": 1747,
+   "pct": 83.74,
+   "ci95": [
+    81.94,
+    85.4
+   ]
+  },
+  "D": {
+   "met": 1326,
+   "n": 1733,
+   "pct": 76.51,
+   "ci95": [
+    74.46,
+    78.45
+   ]
+  },
+  "E": {
+   "met": 1202,
+   "n": 1576,
+   "pct": 76.27,
+   "ci95": [
+    74.11,
+    78.3
+   ]
+  }
+ },
+ "pairwise_vs_A": [
+  {
+   "comparison": "A vs B",
+   "delta_pp": 3.579,
+   "chi2": 5.6103,
+   "p": 0.017854703547480078,
+   "cohens_h": 0.0805,
+   "significant": true
+  },
+  {
+   "comparison": "A vs C",
+   "delta_pp": 12.685,
+   "chi2": 80.1864,
+   "p": 3.4069584831128047e-19,
+   "cohens_h": 0.3061,
+   "significant": true
+  },
+  {
+   "comparison": "A vs D",
+   "delta_pp": 5.456,
+   "chi2": 13.3538,
+   "p": 0.00025789948052905065,
+   "cohens_h": 0.1242,
+   "significant": true
+  },
+  {
+   "comparison": "A vs E",
+   "delta_pp": 5.21,
+   "chi2": 11.5302,
+   "p": 0.0006847475888747126,
+   "cohens_h": 0.1184,
+   "significant": true
+  }
+ ],
+ "t5_w1": {
+  "A": 66.7,
+  "B": 33.3,
+  "C": 100.0,
+  "D": 33.3,
+  "E": 8.3
+ },
+ "t5_w1_per_model_armA": {
+  "M3 GPT-6 Luna": {
+   "met": 0,
+   "n": 2
+  },
+  "M2 MiniMax-M3": {
+   "met": 0,
+   "n": 2
+  },
+  "M4 DeepSeek V4.1 Flash": {
+   "met": 2,
+   "n": 2
+  },
+  "M6 Muse Spark 1.3 Contributor": {
+   "met": 2,
+   "n": 2
+  },
+  "M5 GLM-5.3-Flash": {
+   "met": 2,
+   "n": 2
+  },
+  "M1 Qwen3.7 Plus": {
+   "met": 2,
+   "n": 2
+  }
+ },
+ "per_model_CA": {
+  "M1 Qwen3.7 Plus": {
+   "A": 73.47,
+   "C": 83.67,
+   "delta": 10.2
+  },
+  "M2 MiniMax-M3": {
+   "A": 66.67,
+   "C": 77.21,
+   "delta": 10.54
+  },
+  "M3 GPT-6 Luna": {
+   "A": 73.81,
+   "C": 89.46,
+   "delta": 15.65
+  },
+  "M4 DeepSeek V4.1 Flash": {
+   "A": 70.41,
+   "C": 80.61,
+   "delta": 10.2
+  },
+  "M5 GLM-5.3-Flash": {
+   "A": 71.64,
+   "C": 83.39,
+   "delta": 11.75
+  },
+  "M6 Muse Spark 1.3 Contributor": {
+   "A": 70.41,
+   "C": 88.1,
+   "delta": 17.69
+  }
+ }
+}

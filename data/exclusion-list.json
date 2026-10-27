@@ -1,0 +1,19 @@
+[
+ "T4-M1Qwen3.7Plus-E-r2",
+ "T8-M2MiniMax-M3-E-r2",
+ "T1-M1Qwen3.7Plus-E-r2",
+ "T6-M2MiniMax-M3-B-r2",
+ "T6-M3GPT-6Luna-E-r2",
+ "T7-M5GLM-5.3-Flash-E-r1",
+ "T7-M2MiniMax-M3-E-r2",
+ "T7-M5GLM-5.3-Flash-E-r2",
+ "T6-M5GLM-5.3-Flash-E-r2",
+ "T2-M3GPT-6Luna-E-r2",
+ "T7-M6MuseSpark1.3Contributor-B-r1",
+ "T7-M1Qwen3.7Plus-E-r2",
+ "T9-M6MuseSpark1.3Contributor-E-r2",
+ "T6-M4DeepSeekV4.1Flash-E-r2",
+ "T9-M5GLM-5.3-Flash-E-r2",
+ "T3-M2MiniMax-M3-E-r1",
+ "T13-M5GLM-5.3-Flash-E-r2"
+]
