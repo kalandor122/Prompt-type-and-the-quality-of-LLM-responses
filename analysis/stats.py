@@ -8,13 +8,30 @@ Bemenet:
 
 Kimenet: konzolriport + stats-output.json
 
-Függőség: csak a Python standard könyvtár (nincs numpy/scipy).
+Függőség: numpy (a matplotlib már úgyis behúzza); scipy nem kell.
+
+Statisztika:
+    A megfigyelés egysége a futás, nem az elvárás. Egy futás 13-20 elvárása
+    ugyanabból a beszélgetésből származik, ezért nem függetlenek egymástól.
+    A páronkénti szignifikanciát futásszintű permutációs próba adja
+    20 000 újrakeveréssel, Holm-korrekcióval. A khi-négyzet érték csak
+    összehasonlításul szerepel.
     Khi-négyzet 2x2-re, df=1:  p = erfc(sqrt(chi2 / 2))
 
 Futtatás:
     python3 stats.py
 """
 import json, math, os
+
+try:
+    import numpy as np
+except ImportError:
+    raise SystemExit(
+        "Ehhez a szkripthez numpy kell (a matplotlib úgyis behúzza):\n"
+        "    pip install -r requirements.txt\n"
+        "A permutációs próba a dolgozatéval azonos véletlenszám-generátort használ,\n"
+        "ezért nem helyettesíthető standard könyvtárral."
+    )
 from collections import defaultdict
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -86,11 +103,92 @@ def h_label(h):
 
 
 def fmt_p(p):
-    return '<0,001' if p < 0.001 else f'{p:.3f}'.replace('.', ',')
+    # fél-felfelé kerekítés: 0,0385 -> 0,039 (a Python formázása fél-egészre kerekít)
+    from decimal import Decimal, ROUND_HALF_UP
+    if p < 0.001:
+        return '<0,001'
+    d = Decimal(str(p)).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+    return f'{d:.3f}'.replace('.', ',')
 
 
 def fmt(x, d=2):
     return f'{x:.{d}f}'.replace('.', ',')
+
+
+def permutation_test(group_a, group_b, rng, n_perm=20000):
+    """
+    Futásszintű permutációs próba két karra.
+
+    group_*: [(met, total), ...] — karonként egy elem futásonként.
+    A futásokat újrakeverjük a két csoport között, a csoportméreteket
+    megtartva, és megszámoljuk, milyen gyakran adódik a mértnél nagyobb
+    különbség. Ez a p-érték. A klaszterezést ez kezeli: a futás mozdul,
+    nem az egyes elvárás.
+
+    rng: numpy Generator. A hívó adja át, hogy a véletlenszám-sorozat
+    ugyanaz legyen, mint a dolgozat számításában.
+    """
+    A = np.array([m for m, _ in group_a], dtype=np.int64)
+    An = np.array([n for _, n in group_a], dtype=np.int64)
+    B = np.array([m for m, _ in group_b], dtype=np.int64)
+    Bn = np.array([n for _, n in group_b], dtype=np.int64)
+
+    obs = B.sum() / Bn.sum() - A.sum() / An.sum()
+    M = np.concatenate([A, B])
+    N = np.concatenate([An, Bn])
+    k = len(A)
+    idx = np.arange(len(M))
+
+    hits = 0
+    for _ in range(n_perm):
+        perm = rng.permutation(idx)
+        d = (M[perm[k:]].sum() / N[perm[k:]].sum()
+             - M[perm[:k]].sum() / N[perm[:k]].sum())
+        if abs(d) >= abs(obs) - 1e-12:
+            hits += 1
+    return obs, (hits + 1) / (n_perm + 1)
+
+
+def holm(pairs):
+    """Holm-Bonferroni korrekció. pairs: [(név, p), ...] -> {név: p_holm}"""
+    m = len(pairs)
+    out, prev = {}, 0.0
+    for i, (name, pv) in enumerate(sorted(pairs, key=lambda x: x[1])):
+        adj = max(min(1.0, (m - i) * pv), prev)
+        out[name] = adj
+        prev = adj
+    return out
+
+
+def design_effect(per_arm):
+    """
+    ICC és design effect: mennyivel kevesebb a tényleges információ,
+    mint az elvárások puszta száma.
+    """
+    rec = [x for rows in per_arm.values() for x in rows]
+    rates = [m / n for m, n in rec if n]
+    mean = sum(rates) / len(rates)
+    obs_var = sum((r - mean) ** 2 for r in rates) / (len(rates) - 1)
+    exp_var = sum((m / n) * (1 - m / n) / n for m, n in rec if n) / len(rec)
+    icc = max(0.0, (obs_var - exp_var) / obs_var) if obs_var > 0 else 0.0
+    mbar = sum(n for _, n in rec) / len(rec)
+    return icc, 1 + (mbar - 1) * icc, mbar
+
+
+def fisher_exact(a, b, c, d):
+    """Kétoldali Fisher-féle egzakt p 2x2 táblára (a/b, c/d)."""
+    n = a + b + c + d
+    r1, c1 = a + b, a + c
+    if n == 0:
+        return 1.0
+
+    def prob(k):
+        return math.comb(r1, k) * math.comb(n - r1, c1 - k) / math.comb(n, c1)
+
+    p_obs = prob(a)
+    lo, hi = max(0, c1 - (n - r1)), min(r1, c1)
+    p = sum(prob(k) for k in range(lo, hi + 1) if prob(k) <= p_obs + 1e-12)
+    return min(1.0, p)
 
 
 # ----------------------------------------------------------------- adatbetöltés
@@ -138,35 +236,62 @@ for a in ARMS:
           f"[{fmt(lo*100,1)}; {fmt(hi*100,1)}]".rjust(22))
 print(f"\nÖsszes futás: {len(manifest)}")
 
-# --------------------------------------------- 2. khi-négyzet + Cohen h (A alap)
+# ------------------------------------ 2. klaszter-hatás (a futás a megfigyelés)
 print('\n' + '=' * 74)
-print('2. PÁRONKÉNTI ÖSSZEVETÉSEK  (kiindulás: A kar)')
+print('2. KLASZTER-HATÁS  (miért nem függetlenek az elvárások)')
 print('=' * 74)
-print(f"{'Összevetés':<12}{'Δ (pp)':>9}{'χ²':>9}{'p':>9}{'Cohen h':>10}  {'Hatás':<16}{'Szign.'}")
-pair_rows = []
-for b in 'BCDE':
-    a_, b_ = tot['A'], tot[b]
-    chi2, p, df = chi2_2x2(a_['met'], a_['n'] - a_['met'],
-                           b_['met'], b_['n'] - b_['met'])
-    h = cohens_h(arm_p['A'], arm_p[b])
-    sig = 'igen' if p < 0.05 else 'nem'
-    print(f"A → {b:<8}{(arm_p[b]-arm_p['A'])*100:>+8.2f}{chi2:>9.2f}{fmt_p(p):>9}"
-          f"{fmt(h):>10}  {h_label(h):<16}{sig}")
-    pair_rows.append({'comparison': f'A vs {b}', 'delta_pp': round((arm_p[b]-arm_p['A'])*100, 3),
-                      'chi2': round(chi2, 4), 'p': p, 'cohens_h': round(h, 4),
-                      'significant': p < 0.05})
 
-# a dolgozatban külön szereplő összevetések
-print('\n— a dolgozatban kiemelt további összevetések —')
-extra = [('C', 'A'), ('E', 'B'), ('E', 'C'), ('B', 'D')]
-for x, y in extra:
-    a_, b_ = tot[x], tot[y]
-    chi2, p, df = chi2_2x2(a_['met'], a_['n'] - a_['met'],
-                           b_['met'], b_['n'] - b_['met'])
-    h = cohens_h(arm_p[x], arm_p[y])
-    print(f"  {x} vs {y}:  Δ={(arm_p[x]-arm_p[y])*100:+.2f} pp   "
-          f"χ²={chi2:.2f}  p={fmt_p(p)}  h={fmt(h)} ({h_label(h)})  "
-          f"{'szignifikáns' if p < 0.05 else 'nem szignifikáns'}")
+per_run = defaultdict(list)          # kar -> [(met, total)] futásonként
+# manifest-sorrendben építjük, hogy a permutáció ugyanazt adja, mint a dolgozatban
+for rid, m in runs.items():
+    wants = verdicts.get(rid)
+    if not wants:
+        continue
+    met = sum(1 for v in wants.values() if v == 'MET')
+    n = sum(1 for v in wants.values() if v in ('MET', 'VIOL'))
+    if n:
+        per_run[m['arm']].append((met, n))
+
+icc, deff, mbar = design_effect(per_run)
+print(f"  ICC (futáson belüli korreláció)   = {icc:.3f}")
+print(f"  átlagos klaszterméret             = {mbar:.1f} elvárás / futás")
+print(f"  design effect                     = {deff:.2f}")
+print(f"  → {tot['A']['n']} elvárás ≈ {tot['A']['n'] / deff:.0f} független megfigyelés")
+print("  Az elvárások egy futáson belül együtt mozognak, ezért a khi-négyzet")
+print("  próba alábecsüli a p-értéket. A továbbiakban a futás a megfigyelés.")
+
+# ------------------------------------- 3. páronkénti összevetések (permutáció)
+print('\n' + '=' * 74)
+print('3. PÁRONKÉNTI ÖSSZEVETÉSEK  (futásszintű permutációs próba + Holm)')
+print('=' * 74)
+print(f"{'Összevetés':<12}{'Δ (pp)':>9}{'χ² p':>9}{'perm. p':>10}{'Holm p':>9}{'Cohen h':>10}  Szign.")
+
+PAIRS = [('A', 'B'), ('A', 'D'), ('A', 'E'), ('A', 'C'),
+         ('E', 'C'), ('B', 'E'), ('B', 'D'), ('D', 'E')]
+SEED = 20261104
+rng = np.random.default_rng(SEED)      # egy generator, végig ugyanaz
+pair_rows = []
+for x, y in PAIRS:
+    ax, ay = tot[x], tot[y]
+    chi2, p_chi, _ = chi2_2x2(ax['met'], ax['n'] - ax['met'],
+                              ay['met'], ay['n'] - ay['met'])
+    obs, p_perm = permutation_test(per_run[x], per_run[y], rng)
+    pair_rows.append({'comparison': f'{x} vs {y}', 'delta_pp': round(obs * 100, 2),
+                      'chi2': round(chi2, 2), 'p_chi2': round(p_chi, 4),
+                      'p_perm': round(p_perm, 4),
+                      'cohens_h': round(cohens_h(arm_p[x], arm_p[y]), 3),
+                      '_perm_raw': p_perm})
+
+# a Holm-korrekciót a KEREKÍTETLEN p-értékekből kell számolni
+adj = holm([(r['comparison'], r['_perm_raw']) for r in pair_rows])
+for r in pair_rows:
+    r['p_holm'] = round(adj[r['comparison']], 4)
+    r['significant'] = adj[r['comparison']] < 0.05
+    r.pop('_perm_raw', None)
+    print(f"{r['comparison']:<12}{r['delta_pp']:>+9.2f}{fmt_p(r['p_chi2']):>9}"
+          f"{fmt_p(r['p_perm']):>10}{fmt_p(r['p_holm']):>9}{fmt(r['cohens_h']):>10}"
+          f"  {'igen' if r['significant'] else 'nem'}")
+print("\n  A χ² p csak összehasonlításul; a döntés a Holm-korrigált permutációs p.")
 
 # ------------------------------------------------------------- 3. T5 hamis premissza
 print('\n' + '=' * 74)
@@ -191,13 +316,16 @@ for a in ARMS:
     t5p[a] = d['met'] / d['n']
     print(f"{a:<6}{d['met']:>8}{d['n']:>8}{fmt(t5p[a]*100,1):>8}%")
 
-if 'A' in t5p and 'E' in t5p:
-    a_, e_ = t5['A'], t5['E']
-    chi2, p, _ = chi2_2x2(a_['met'], a_['n'] - a_['met'],
-                          e_['met'], e_['n'] - e_['met'])
-    print(f"\n  A vs E:  χ²={chi2:.3f}  p={fmt_p(p)}  "
-          f"h={fmt(cohens_h(t5p['A'], t5p['E']))}  "
-          f"→ {'SZIGNIFIKÁNS' if p < 0.05 else 'nem szignifikáns'}")
+if 'A' in t5p:
+    for other in ('E', 'C'):
+        if other not in t5p:
+            continue
+        a_, o_ = t5['A'], t5[other]
+        p = fisher_exact(a_['met'], a_['n'] - a_['met'],
+                         o_['met'], o_['n'] - o_['met'])
+        print(f"\n  A vs {other}:  Fisher p={fmt_p(p)}  "
+              f"h={fmt(cohens_h(t5p['A'], t5p[other]))}  "
+              f"→ {'SZIGNIFIKÁNS' if p < 0.05 else 'nem szignifikáns'}")
 
 # --------------------------------------------- 4. T5 W1 modellenként (A kar)
 print('\n' + '=' * 74)
@@ -248,7 +376,11 @@ summary = {
                  'pct': round(arm_p[a] * 100, 2),
                  'ci95': [round(v * 100, 2) for v in wilson(tot[a]['met'], tot[a]['n'])]}
              for a in ARMS},
-    'pairwise_vs_A': pair_rows,
+    'clustering': {'icc': round(icc, 3), 'design_effect': round(deff, 2),
+                   'avg_cluster_size': round(mbar, 1),
+                   'effective_n_armA': round(tot['A']['n'] / deff),
+                   'method': 'run-level permutation test, Holm-corrected'},
+    'pairwise': pair_rows,
     't5_w1': {a: round(v * 100, 1) for a, v in t5p.items()},
     't5_w1_per_model_armA': {k: {'met': v['met'], 'n': v['n']} for k, v in per_model.items()},
     'per_model_CA': {k: {'A': round(v[0] * 100, 2), 'C': round(v[1] * 100, 2),

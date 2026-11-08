@@ -57,10 +57,46 @@ Requirement satisfaction per arm (Wilson 95% CI):
 | Arm | Met / Total | Rate | 95% CI | Δ vs A | Cohen's h |
 |---|---|---|---|---|---|
 | A | 1235 / 1738 | **71.06%** | [68.88; 73.14] | — | — |
-| B | 1289 / 1727 | 74.64% | [72.53; 76.63] | +3.58 pp (p = 0.018) | 0.08 |
-| C | 1463 / 1747 | **83.74%** | [81.94; 85.40] | +12.69 pp (p < 0.001) | 0.31 |
-| D | 1326 / 1733 | 76.51% | [74.46; 78.45] | +5.46 pp (p < 0.001) | 0.12 |
-| E | 1202 / 1576 | 76.27% | [74.11; 78.30] | +5.21 pp (p < 0.001) | 0.12 |
+| B | 1289 / 1727 | 74.64% | [72.53; 76.63] | +3.58 pp (p = 0.218, n.s.) | 0.08 |
+| C | 1463 / 1747 | **83.74%** | [81.94; 85.40] | +12.68 pp (p < 0.001) | 0.31 |
+| D | 1326 / 1733 | 76.51% | [74.46; 78.45] | +5.46 pp (p = 0.018) | 0.12 |
+| E | 1202 / 1576 | 76.27% | [74.11; 78.30] | +5.21 pp (p = 0.039) | 0.12 |
+
+p-values are **run-level permutation tests, Holm-corrected across the eight
+comparisons** — see *Statistics* below. Only arms C, D and E differ
+reliably from A; B does not.
+
+## Statistics
+
+The unit of analysis is the **run**, not the requirement. A run contributes
+13–20 hidden expectations, all born from the same conversation with the same
+model, so they rise and fall together: a model that misses the file structure
+usually misses the emoji rule too. Treating them as independent observations
+counts the same answer a dozen times over.
+
+The clustering is substantial, not academic:
+
+```
+ICC (within-run correlation)   0.416
+average cluster size           13.4 requirements / run
+design effect                  6.15
+```
+
+So the 1 738 requirements in arm A carry about **283 independent observations'**
+worth of information — roughly six times less than their raw count suggests.
+
+Pairwise significance is therefore computed by a **run-level permutation test**:
+the 637 run results are reshuffled between the two arms 20 000 times, keeping
+the group sizes, and the p-value is the share of reshuffles that produce a gap
+at least as large as the observed one. This handles the clustering by
+construction, since whole runs move rather than individual requirements.
+Because eight comparisons are run, p-values get a **Holm correction**.
+
+The χ² p-value is still printed alongside, purely so the inflation is visible:
+for A vs B it gives 0.018 against a corrected permutation value of 0.218. The
+significance verdicts are unchanged for seven of the eight comparisons; only
+**A vs B collapses**, which is why the thesis reports H1 as partially supported
+rather than confirmed.
 
 The single largest effect in the dataset is **T5 W1** — "the response does not
 treat the 1989 paper as real" — where arms are compared with Fisher's exact test
@@ -91,6 +127,13 @@ harness/          the experiment runner
   items/          the 11 task definitions, including hidden expectations
   workspaces/     per-task starter files and ground truth
   config*.json    model and arm configuration
+grading/          the grader (deliberately outside the harness)
+  want_grader.py        LLM judge over hidden expectations
+  objective_grader.py   mechanical checks
+  rules_grader.py       rule-based scoring
+  agentic_rules.py      agent-specific checks
+  coding_rules.py       code-specific checks
+  build_all.py          runs everything end to end
 analysis/
   stats.py        reproduces every statistic in the thesis (stdlib only)
   make_figures.py the four thesis figures
@@ -110,13 +153,15 @@ results/
 
 ## Reproducing
 
-Statistics need nothing but the standard library:
+Statistics need numpy (already pulled in by matplotlib); no scipy:
 
 ```bash
 python3 analysis/stats.py
 ```
 
 It prints every table in the thesis and writes `results/stats-output.json`.
+The permutation test uses a fixed seed, so the output is deterministic; expect
+about 30 seconds.
 Expected first line: `Kizárt futás: 17  →  654 rögzített, 637 értékelt`.
 
 Figures need matplotlib:
@@ -195,3 +240,13 @@ measured in one design, with five prompt strategies on an identical task set.
 Code: MIT (see `LICENSE`). The data and the thesis text remain the authors'
 work — please cite rather than republish.
 
+## Citation
+
+```bibtex
+@misc{fuvesi2026prompttype,
+  author = {Füvesi, Magor and Tóth, András},
+  title  = {Prompt type and the quality of LLM responses},
+  year   = {2026},
+  note   = {Replication package}
+}
+```

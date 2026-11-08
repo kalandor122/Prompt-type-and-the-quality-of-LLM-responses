@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: "Prompt type and the quality of LLM responses"
+message: "If you use this code or these results, please cite it as below."
+type: software
+authors:
+  - family-names: "Füvesi"
+    given-names: "Magor"
+  - family-names: "Tóth"
+    given-names: "András"
+year: 2026
+license: MIT
+repository-code: "https://github.com/<user>/llm-prompt-hallucination"
+keywords:
+  - large language models
+  - hallucination
+  - sycophancy
+  - prompting
+  - evaluation

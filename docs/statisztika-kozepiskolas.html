@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statisztika emelt szinten érthetően — LLM-dolgozat</title>
+<style>
+  :root{
+    --ink:#16181d; --muted:#5b6270; --line:#e3e6ec; --bg:#fbfbfd; --card:#fff;
+    --accent:#3b5bdb; --accent-soft:#eef1fd;
+    --good:#1f8a4c; --good-soft:#e8f6ee;
+    --bad:#c92a2a; --bad-soft:#fdecec;
+    --warn:#b8860b; --warn-soft:#fdf6e3;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:70px 0 40px;border-bottom:1px solid var(--line);margin-bottom:44px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.12;margin:0 0 14px;letter-spacing:-.02em}
+  .sub{font-size:19px;color:var(--muted);max-width:640px;margin:0}
+  .tag{display:inline-block;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;
+       color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:99px;
+       font-weight:650;margin-bottom:20px}
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:52px}
+  nav.toc h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px}
+  nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:36px}
+  nav.toc li{margin:5px 0;font-size:15px}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  nav.toc a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+  section{margin:0 0 58px;scroll-margin-top:24px}
+  .num{font-size:12.5px;font-weight:700;color:var(--accent);letter-spacing:.1em}
+  h2{font-size:clamp(22px,3.2vw,29px);margin:6px 0 6px;letter-spacing:-.015em;line-height:1.2}
+  .hu{font-size:14px;color:var(--muted);margin:0 0 18px;font-style:italic}
+  h3{font-size:17px;margin:26px 0 8px}
+  p{margin:0 0 14px}
+  .lead{font-size:17.5px;color:#2a2f3a}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:18px 0}
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;margin:20px 0}
+  .demo-label{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin-bottom:14px}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:13px 17px;border-radius:0 9px 9px 0;margin:16px 0;font-size:15.5px}
+  .callout.good{border-color:var(--good);background:var(--good-soft)}
+  .callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}nav.toc ol{columns:1}}
+  code{font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f0f2f6;padding:2px 6px;border-radius:5px}
+  .readout{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);margin-top:10px}
+  .readout b{color:var(--ink)}
+  input[type=range]{width:100%;accent-color:var(--accent);height:26px}
+  input[type=number]{width:82px;font:14px ui-monospace,monospace;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff}
+  label.f{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  button{font:600 14px system-ui;padding:8px 15px;border-radius:9px;border:1px solid var(--accent);
+         background:var(--accent);color:#fff;cursor:pointer}
+  button:hover{filter:brightness(1.07)}
+  button.ghost{background:#fff;color:var(--accent)}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+  th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  td.num2{font-family:ui-monospace,monospace;white-space:nowrap}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px}
+  .pill.y{background:var(--good-soft);color:var(--good)}
+  .pill.n{background:var(--bad-soft);color:var(--bad)}
+  svg{display:block;max-width:100%}
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:22px 0}
+  @media(max-width:760px){.flow{grid-template-columns:1fr 1fr}}
+  .flow div{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;font-size:13.5px;line-height:1.45}
+  .flow b{display:block;color:var(--accent);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+  .big{font-size:38px;font-weight:750;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  footer{border-top:1px solid var(--line);padding-top:26px;color:var(--muted);font-size:14px}
+  .kbd{border:1px solid #cfd4dd;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font:12.5px ui-monospace,monospace;background:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="tag">Csak neked · a dolgozat statisztikájához</div>
+  <h1>Minden statisztikai fogalom,<br>középiskolás szinten</h1>
+  <p class="sub">Nem kell egyetemi tankönyv. Minden fogalom egy hasonlattal kezdődik,
+  aztán egy ábra mutatja meg, aztán egy mondat, amit nyugodtan beírhatsz a dolgozatba.</p>
+</header>
+
+<nav class="toc">
+  <h2>Tartalom</h2>
+  <ol>
+    <li><a href="#t1">Százalék és arány</a></li>
+    <li><a href="#t2">A haranggörbe</a></li>
+    <li><a href="#t3">Szórás és z-érték</a></li>
+    <li><a href="#t4">A p-érték</a></li>
+    <li><a href="#t5">α = 0,05 és a „szignifikáns”</a></li>
+    <li><a href="#t6">Kétoldalú vizsgálat</a></li>
+    <li><a href="#t7">Khi-négyzet (χ²)</a></li>
+    <li><a href="#t8">Szabadsági fok</a></li>
+    <li><a href="#t9">Fisher-féle egzakt próba</a></li>
+    <li><a href="#t10">Hatásnagyság (Cohen h)</a></li>
+    <li><a href="#t11">Konfidenciaintervallum</a></li>
+    <li><a href="#t12">A Wilson-intervallum</a></li>
+    <li><a href="#t13">Függetlenség és klaszterezés</a></li>
+    <li><a href="#t14">ICC</a></li>
+    <li><a href="#t15">Design effect</a></li>
+    <li><a href="#t16">Permutációs próba</a></li>
+    <li><a href="#t17">A többszörös összevetés bajа</a></li>
+    <li><a href="#t18">Holm-korrekció</a></li>
+    <li><a href="#t19">Szignifikáns ≠ fontos</a></li>
+    <li><a href="#t20">Szószedet</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<section id="t1">
+  <div class="num">01</div>
+  <h2>Százalék és arány</h2>
+  <p class="hu">proportion · percentage · arány · százalék</p>
+
+  <p class="lead">A statisztika minden állítása ugyanabból indul ki: hányan teljesítettek
+  az összesből.</p>
+
+  <p>A dolgozatban a kérdés az, hogy a modell hány rejtett elvárást teljesített. Az A karban
+  1235-öt az 1738-ból. Ez nem „sok”, és nem „kevés” — ez egy <b>arány</b>:</p>
+
+  <div class="card" style="text-align:center">
+    <div style="font:15px ui-monospace,monospace;color:var(--muted)">1235 / 1738</div>
+    <div class="big" style="margin:10px 0;color:var(--accent)">71,06%</div>
+    <div style="font-size:14px;color:var(--muted)">teljesült elvárás · 503 nem teljesült</div>
+  </div>
+
+  <p>Két dolog, amit érdemes észben tartani:</p>
+  <p><b>Az arány önmagában keveset mond.</b> 50% nagyon jó, ha a diákok harmada szokott átmenni,
+  és nagyon rossz, ha a kilencven százalékuk. A viszonyítási alap mindig kell.</p>
+  <p><b>A százalék mögött mindig két szám van.</b> A „75%” mást jelent 3/4-nél és 750/1000-nél.
+  Az elsőnél pár ember döntött, a másodiknál ezernyi. Ezért írjuk mindig oda mindkét számot.</p>
+
+  <div class="callout"><b>Így mondd:</b> „Az A kar a rejtett elvárások 71,06%-át teljesítette
+  (1235/1738).” A zárójel a lényeg — abból látszik, mennyire lehet komolyan venni.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t2">
+  <div class="num">02</div>
+  <h2>A haranggörbe</h2>
+  <p class="hu">normal distribution · normális eloszlás · haranggörbe</p>
+
+  <p class="lead">Ha sok véletlen hatás összeadódik, az eredmény szinte mindig ugyanolyan
+  alakot vesz fel: középen sok, a szélein kevés.</p>
+
+  <p>Ez a haranggörbe, és nem valami matematikai önkény. Magasság, mérési hiba, kockadobások
+  összege, vizsgaeredmények — mind haranggörbét rajzolnak. A statisztika azért szereti,
+  mert <b>tudja, hogy mennyi terület van bárhol alatta</b>, és ez a terület valószínűséget jelent.</p>
+
+  <div class="demo">
+    <div class="demo-label">A görbe alatti terület = valószínűség</div>
+    <svg id="bell1" viewBox="0 0 700 240" width="700" height="240"></svg>
+    <div class="readout">A satírozott csík a <b>szélek</b> valószínűsége. A középső fehér rész
+    a „semmi különös” zóna.</div>
+  </div>
+
+  <p>A vízszintes tengely a <b>szórás</b> egységeiben mér. A nulla a közép. A 2 azt jelenti,
+  hogy „két szórással a közép felett” — ez már elég ritka.</p>
+
+  <div class="callout"><b>Emlékezz erre a három számra:</b> a terület 68%-a ±1 szóráson belül van,
+  95%-a ±2-n belül, 99,7%-a ±3-on belül. Ez a „68–95–99,7 szabály”, és a statisztika
+  fél órája ebből áll.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t3">
+  <div class="num">03</div>
+  <h2>Szórás és z-érték</h2>
+  <p class="hu">standard deviation · szórás · z-score · z-érték</p>
+
+  <p class="lead">A szórás azt méri, mennyire szóródnak az adatok a közép körül.
+  A z-érték pedig megmondja, hány szórással vagy odébb.</p>
+
+  <p>Ha azt mondom, „a B kar 3,58 százalékponttal jobb az A karnál”, az önmagában nem mondja meg,
+  hogy ez sok vagy kevés. Attól függ, <b>mekkora a zaj</b>.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Kicsi a zaj</h3>
+      <svg viewBox="0 0 300 120" width="300" height="120">
+        <line x1="20" y1="95" x2="285" y2="95" stroke="#cfd4dd"/>
+        <g fill="#3b5bdb">
+          <circle cx="140" cy="80" r="4"/><circle cx="148" cy="84" r="4"/><circle cx="132" cy="78" r="4"/>
+          <circle cx="156" cy="86" r="4"/><circle cx="126" cy="76" r="4"/><circle cx="144" cy="88" r="4"/>
+        </g>
+        <line x1="141" y1="58" x2="141" y2="95" stroke="#16181d" stroke-dasharray="3 3"/>
+      </svg>
+      <p style="font-size:14px;color:var(--muted);margin:8px 0 0">Minden futás ugyanazt hozza.
+      Egy kis különbség is valódi.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Nagy a zaj</h3>
+      <svg viewBox="0 0 300 120" width="300" height="120">
+        <line x1="20" y1="95" x2="285" y2="95" stroke="#cfd4dd"/>
+        <g fill="#3b5bdb">
+          <circle cx="70" cy="70" r="4"/><circle cx="210" cy="72" r="4"/><circle cx="105" cy="88" r="4"/>
+          <circle cx="185" cy="86" r="4"/><circle cx="55" cy="86" r="4"/><circle cx="230" cy="78" r="4"/>
+        </g>
+        <line x1="145" y1="58" x2="145" y2="95" stroke="#16181d" stroke-dasharray="3 3"/>
+      </svg>
+      <p style="font-size:14px;color:var(--muted);margin:8px 0 0">Ugyanaz a közép, de szanaszét.
+      A különbség eltűnik a zajban.</p>
+    </div>
+  </div>
+
+  <p>A z-érték formálisan ennyi: <code>z = (mért érték − közép) / szórás</code>. Ha z = 2,
+  akkor az eredmény két szórással van a közép felett. Minél nagyobb a z, annál valószínűtlenebb,
+  hogy puszta véletlen hozta össze.</p>
+
+  <div class="callout"><b>A dolgozatodban:</b> a két kar 2,37 szórással van egymástól. Ez a szám
+  a khi-négyzetből jön: <code>√5,61 = 2,37</code>.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t4">
+  <div class="num">04</div>
+  <h2>A p-érték</h2>
+  <p class="hu">p-value · p-érték</p>
+
+  <p class="lead">A p-érték egy kérdésre válaszol: ha a két kar valójában ugyanolyan jó lenne,
+  milyen gyakran látnék ekkora különbséget? Méghozzá puszta véletlenből.</p>
+
+  <p>Ez a legtöbbet félreértett fogalom az egész statisztikában. Nézd meg a kérdést még egyszer:</p>
+
+  <div class="callout warn"><b>p = 0,018 nem azt jelenti, hogy</b> „98,2% esély van rá, hogy az
+  eredmény igaz”.<br>
+  <b>Azt jelenti, hogy</b> egy olyan világban, ahol a karok egyformák, 1,8%-ban láthattad volna
+  ezt a különbséget.</div>
+
+  <div class="demo">
+    <div class="demo-label">Húzd el a csúszkát — mozgatod a két csoport távolságát</div>
+    <input type="range" id="zslider" min="0" max="4" step="0.01" value="2.37">
+    <svg id="bell2" viewBox="0 0 700 250" width="700" height="250"></svg>
+    <div class="readout" id="bellout"></div>
+  </div>
+
+  <h3>Miért pont ez a szám?</h3>
+  <p>A görbe alatti szélső terület a válasz. Kétoldalú vizsgálatnál mindkét szélét számoljuk,
+  mert a különbség bármelyik irányba eshetett volna. A dolgozatban:</p>
+
+  <table>
+    <tr><th>Ha a karok egyformák…</th><th>Milyen gyakran produkál ennél nagyobb eltérést?</th></tr>
+    <tr><td>z = 1,96 (kb. 2 szórás)</td><td class="num2">5,0% → p = 0,050</td></tr>
+    <tr><td><b>z = 2,37 — a te A vs B adatod</b></td><td class="num2"><b>1,8% → p = 0,018</b></td></tr>
+    <tr><td>z = 2,58</td><td class="num2">1,0% → p = 0,010</td></tr>
+    <tr><td>z = 3,29</td><td class="num2">0,1% → p = 0,001</td></tr>
+  </table>
+
+  <div class="callout"><b>Így mondd:</b> „A khi-négyzet próba p = 0,018 értéket adott, ami azt
+  jelenti, hogy ha a karok valóban egyformák lennének, ekkora különbség csak az esetek 1,8%-ában
+  fordulna elő.”</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t5">
+  <div class="num">05</div>
+  <h2>α = 0,05 és a „szignifikáns”</h2>
+  <p class="hu">significance level · szignifikanciaszint · α (alfa)</p>
+
+  <p class="lead">α egy önként vállalt hibaarány: ennyi téves riasztást vagy hajlandó
+  elviselni.</p>
+
+  <p>Ha minden nap 100-szor tesztelnéd, hogy felkelt-e a nap, a szokásos 5%-os küszöbbel
+  átlagosan ötször tévesen jelented be a napfelkeltét. Az α tehát nem a valóságról szól,
+  hanem a <b>te tűréshatárodról</b>.</p>
+
+  <div class="card" style="text-align:center">
+    <div style="font:15px ui-monospace,monospace;color:var(--muted)">α = 0,05 = 1 a 20-ból</div>
+    <div style="font-size:15px;margin-top:10px">
+      <span class="pill y">p &lt; 0,05 → statisztikailag szignifikáns</span>
+      &nbsp;
+      <span class="pill n">p ≥ 0,05 → nem szignifikáns</span>
+    </div>
+  </div>
+
+  <p>Fontos: a „nem szignifikáns” <b>nem azt jelenti, hogy nincs különbség</b>. Azt jelenti,
+  hogy a különbséget nem lehet megkülönböztetni a zajtól. A dolgozatban a B vs E esetnél
+  pont ez történik: lehet, hogy van 1,63 pontnyi különbség, csak épp nem tudjuk bebizonyítani.</p>
+
+  <div class="callout bad"><b>Gyakori hiba dolgozatokban:</b> „nem szignifikáns, tehát a két kar
+  egyenlő”. Helyesen: „nem szignifikáns, tehát nem volt elég bizonyíték arra, hogy
+  különbözzenek”.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t6">
+  <div class="num">06</div>
+  <h2>Kétoldalú vizsgálat</h2>
+  <p class="hu">two-tailed · kétoldalú</p>
+
+  <p class="lead">Kétfelé számolunk, mert nem tudtuk előre, melyik irányba lesz a különbség.</p>
+
+  <p>Ha azt kérdezed, „jobb-e a B az A-nál”, egyoldalú vagy. Ha azt, „<b>különbözik-e</b> a B az
+  A-tól”, kétoldalú — mert ugyanúgy érdekes, ha rosszabb.</p>
+
+  <div class="card">
+    <svg viewBox="0 0 680 130" width="680" height="130">
+      <!-- one-tailed -->
+      <g>
+        <text x="0" y="14" font-size="13" fill="#5b6270" font-weight="700">EGYOLDALÚ</text>
+        <path d="M20,95 C60,95 70,30 170,30 C270,30 280,95 320,95" fill="none" stroke="#3b5bdb" stroke-width="2.5"/>
+        <path d="M250,95 C265,95 275,72 292,52 L292,95 Z" fill="#3b5bdb" opacity=".22"/>
+      </g>
+      <!-- two-tailed -->
+      <g transform="translate(360,0)">
+        <text x="0" y="14" font-size="13" fill="#5b6270" font-weight="700">KÉTOLDALÚ</text>
+        <path d="M20,95 C60,95 70,30 170,30 C270,30 280,95 320,95" fill="none" stroke="#3b5bdb" stroke-width="2.5"/>
+        <path d="M250,95 C265,95 275,72 292,52 L292,95 Z" fill="#3b5bdb" opacity=".22"/>
+        <path d="M20,95 C35,95 45,72 62,52 L62,95 Z" fill="#3b5bdb" opacity=".22"/>
+      </g>
+    </svg>
+    <p style="font-size:14.5px;color:var(--muted);margin:12px 0 0">Ugyanaz a görbe. A kétoldalú
+    mindkét szélét számolja, ezért <b>ugyanakkora hatás nagyobb p-értéket ad</b>. Ez a
+    konzervatívabb, becsületesebb választás, amikor nem tudsz előre irányt.</p>
+  </div>
+
+  <div class="callout"><b>A dolgozatban:</b> minden p-érték kétoldalú, mert a kutatás azt
+  kérdezte, <i>hogyan függ</i> a minőség a prompt jellegétől — nem azt, hogy javít-e.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t7">
+  <div class="num">07</div>
+  <h2>Khi-négyzet (χ²)</h2>
+  <p class="hu">chi-square · khi-négyzet · χ²</p>
+
+  <p class="lead">Összeadod, mennyire tér el a látott eredmény attól, amit „unalmas,
+  semmi különbség” világban várnál.</p>
+
+  <p>Négy szám van: ki teljesített és ki nem, két csoportban. Ha a két kar ugyanolyan, akkor
+  mindenki ugyanakkora arányban teljesít. Ezt kiszámolod, aztán cellánként megnézed,
+  mekkora a különbség a látott és a várt között, <b>négyzetre emeled</b> (hogy a plusz és mínusz
+  ne üsse ki egymást), és elosztod a várttal.</p>
+
+  <div class="demo">
+    <div class="demo-label">A te A vs B adatod — számolj vele</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+      <div><label class="f">A kar · teljesült</label><input type="number" id="c_a" value="1235"></div>
+      <div><label class="f">A kar · összes</label><input type="number" id="c_an" value="1738"></div>
+      <div><label class="f">B kar · teljesült</label><input type="number" id="c_b" value="1289"></div>
+      <div><label class="f">B kar · összes</label><input type="number" id="c_bn" value="1727"></div>
+    </div>
+    <div id="chi_out"></div>
+  </div>
+
+  <div class="callout"><b>Ez a szám mit jelent?</b> Önmagában semmit — csak azt, hogy mekkora
+  az eltérés a „semmi különbség” világtól. A p-érték lesz belőle: <code>√χ² = z</code>,
+  és a haranggörbe megmondja a szélső területet.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t8">
+  <div class="num">08</div>
+  <h2>Szabadsági fok</h2>
+  <p class="hu">degrees of freedom · df · szabadsági fok</p>
+
+  <p class="lead">Hány számot választhatsz szabadon, mielőtt a többi már kötelező.</p>
+
+  <p>Ha 4 szám összege 100, és az első hármat megadod, a negyedik már adott. Tehát 3 szabad
+  választásod van: df = 3.</p>
+
+  <p>A 2×2-es táblázatnál ugyanez: ha ismered a sorok és oszlopok összegét, egyetlen cella
+  megadásával a maradék három már kötelező. Ezért <b>df = 1</b>.</p>
+
+  <div class="callout good"><b>Ezért egyszerű a képlet.</b> Ha df = 1, a khi-négyzet nem más,
+  mint egy z-érték négyzete: <code>χ² = z²</code>, tehát <code>z = √χ²</code>.
+  Ezért nem kell táblázatot keresgélned — a haranggörbe elég.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t9">
+  <div class="num">09</div>
+  <h2>Fisher-féle egzakt próba</h2>
+  <p class="hu">Fisher's exact test · Fisher-féle egzakt próba</p>
+
+  <p class="lead">A khi-négyzet közelítés. Ha nagyon kevés megfigyelés van, a helyett
+  <b>ki kell számolni az összes lehetséges elrendezést</b> — ezt csinálja Fisher.</p>
+
+  <p>A T5 feladatban karonként csak 12 futás van. Ilyenkor a khi-négyzet megbízhatatlan,
+  mert a „nagy számok” feltétele nem teljesül. Fisher módszere kimerítő: veszi a táblázat
+  összes lehetséges változatát, és megnézi, mekkora részük legalább ilyen szélsőséges.</p>
+
+  <div class="demo">
+    <div class="demo-label">T5 — a nem létező 1989-es cikk</div>
+    <table>
+      <tr><th>Kar</th><th>Korrigálta</th><th>Elfogadta</th><th>Arány</th></tr>
+      <tr><td>A — segítség nélkül</td><td class="num2">8</td><td class="num2">4</td>
+          <td class="num2"><b>66,7%</b></td></tr>
+      <tr><td>E — feltevések</td><td class="num2">1</td><td class="num2">11</td>
+          <td class="num2"><b>8,3%</b></td></tr>
+    </table>
+    <div class="readout">Fisher-féle egzakt próba: <b>p = 0,009</b>. Vagyis ha a két kar
+    egyforma lenne, tízezerből nagyjából 90 esetben látnál ekkora különbséget.</div>
+  </div>
+
+  <div class="callout warn"><b>De figyelj:</b> 12 megfigyelés karonként kevés. A különbség
+  <i>iránya</i> meggyőző, a pontos arány viszont bizonytalan. A dolgozat ezt kimondja
+  a korlátok között — ez erős pont, nem gyengeség.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t10">
+  <div class="num">10</div>
+  <h2>Hatásnagyság — Cohen h</h2>
+  <p class="hu">effect size · hatásnagyság · Cohen h</p>
+
+  <p class="lead">A p-érték azt mondja meg, hogy <b>látszik-e</b> a különbség. A hatásnagyság
+  azt, hogy <b>mekkora</b>.</p>
+
+  <p>Képzeld el, hogy két gyógyszert hasonlítasz össze egymillió betegen. Az egyik 0,1%-kal
+  jobb. Ez bizonyosan nem véletlen — de senki nem fogja bevenni, mert a különbség
+  gyakorlatilag semmi. A p-érték „igen” lesz, a hatásnagyság „elhanyagolható”.</p>
+
+  <div class="demo">
+    <div class="demo-label">A hatásnagyság skálája — a te hatásaid rajta</div>
+    <svg id="hscale" viewBox="0 0 700 170" width="700" height="170"></svg>
+    <div class="readout">A dolgozat legnagyobb hatása a C vs A: <b>h = 0,306</b>. A mérce szerint
+    ez „kicsi”. Minden más ennél is kisebb.</div>
+  </div>
+
+  <p>A Cohen h az arcsin-transzformációt használja, hogy a százalékok szélein
+  (0% és 100% közelében) ne torzuljon a mérés. Neked ezt nem kell tudnod — elég a
+  <b>0,2 / 0,5 / 0,8</b> határvonal.</p>
+
+  <div class="callout bad"><b>A dolgozat legfontosabb mondata ebből fakad:</b> minden hatás
+  elhanyagolható vagy kicsi. A szignifikancia tehát nem jelent nagy különbséget.
+  A prompt jellege számít, de nem írja át a válaszok minőségét.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t11">
+  <div class="num">11</div>
+  <h2>Konfidenciaintervallum</h2>
+  <p class="hu">confidence interval · CI · konfidenciaintervallum</p>
+
+  <p class="lead">A mérés nem egyetlen szám, hanem egy sáv, amiben az igazság nagy
+  valószínűséggel benne van.</p>
+
+  <p>A 71,06% az, amit láttál. De ha holnap megismételnéd a kísérletet, más szám jönne ki.
+  A 95%-os konfidenciaintervallum azt a sávot adja, amibe ez a másik mérés
+  nagyjából 95%-os biztonsággal beleesne.</p>
+
+  <div class="demo">
+    <div class="demo-label">Mozgasd a mintanagyságot — figyeld a sávot</div>
+    <input type="range" id="cislider" min="20" max="3000" step="1" value="1738">
+    <svg id="ci" viewBox="0 0 700 150" width="700" height="150"></svg>
+    <div class="readout" id="ciout"></div>
+  </div>
+
+  <div class="card">
+    <table>
+      <tr><th>Kar</th><th>Arány</th><th>95%-os sáv</th></tr>
+      <tr><td>A</td><td class="num2">71,06%</td><td class="num2">68,9 – 73,1%</td></tr>
+      <tr><td>B</td><td class="num2">74,64%</td><td class="num2">72,5 – 76,6%</td></tr>
+      <tr><td>C</td><td class="num2">83,74%</td><td class="num2">81,9 – 85,4%</td></tr>
+    </table>
+    <p style="font-size:14.5px;color:var(--muted);margin:10px 0 0">Az A és a B sávja
+    <b>átfed</b> — ez pontosan azt jelzi, hogy a különbségük bizonytalan.</p>
+  </div>
+
+  <div class="callout"><b>Így mondd:</b> „A C kar 83,74%-ot ért el (95%-os CI: 81,9–85,4%),
+  ami nem fedi át az A kar intervallumát.” Ez erősebb érv, mint egy p-érték.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t12">
+  <div class="num">12</div>
+  <h2>A Wilson-intervallum</h2>
+  <p class="hu">Wilson score interval</p>
+
+  <p class="lead">A legegyszerűbb képlet százalékra rosszul viselkedik a széleken.
+  A Wilson javítja ezt.</p>
+
+  <p>A naiv képlet: <code>p ± 1,96·√(p(1−p)/n)</code>. Probléma: ha az arány 100% vagy 0%,
+  a sáv szélessége nulla lesz — mintha biztosak lennénk. Pedig 12-ből 12 találat után sem
+  lehetünk biztosak semmiben.</p>
+
+  <div class="demo">
+    <div class="demo-label">12-ből hány találat? — nézd meg a sáv szélét</div>
+    <input type="range" id="wslider" min="0" max="12" step="1" value="12">
+    <svg id="wilson" viewBox="0 0 700 140" width="700" height="140"></svg>
+    <div class="readout" id="wout"></div>
+  </div>
+
+  <div class="callout good"><b>Ezért Wilson.</b> A dolgozatban a C kar 12-ből 12-t ért el a T5
+  feladaton. A naiv képlet azt mondaná: „100%, biztos, kész”. A Wilson azt mondja:
+  „a valódi arány nagyjából 76% és 100% között van” — ez a becsületes állítás.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t13">
+  <div class="num">13</div>
+  <h2>Függetlenség és klaszterezés</h2>
+  <p class="hu">independence · clustering · függetlenség · klaszterezés</p>
+
+  <p class="lead">Ez a dolgozat legfontosabb statisztikai kérdése. A statisztika minden
+  képlete azt feltételezi, hogy a megfigyelések függetlenek. Itt nem azok.</p>
+
+  <p>Egy futás 13–20 elvárást ad. Ezek <b>ugyanabból a beszélgetésből</b> születnek,
+  ugyanazzal a modellel. Ha a modell nem csinál fájlszerkezetet, valószínűleg az emoji
+  szabályt is elrontja. A pontok egy futáson belül együtt mozognak.</p>
+
+  <div class="demo">
+    <div class="demo-label">10 futás × 13 elvárás — kattints az újragenerálásra</div>
+    <button id="cluBtn" class="ghost">Újragenerálás egy másik modellel</button>
+    <div id="cluGrid" style="margin-top:16px"></div>
+    <div class="readout" id="cluOut"></div>
+  </div>
+
+  <p>Ha minden zöld pontot külön megfigyelésnek számolsz, akkor ugyanazt a választ
+  tizenháromszor számolod bele a mintába. Ez olyan, mintha egy diákot 13 kérdéssel
+  megkérdeznél, és utána azt mondanád, hogy 13 diákot vizsgáltál.</p>
+
+  <div class="callout bad"><b>Ezért volt hiba az eredeti számításban.</b> Az 1738 elvárás
+  nem 1738 független megfigyelés. A valódi információ mennyisége sokkal kevesebb —
+  a következő két szakasz megmutatja, mennyivel.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t14">
+  <div class="num">14</div>
+  <h2>ICC — belső korreláció</h2>
+  <p class="hu">intraclass correlation · ICC</p>
+
+  <p class="lead">Egyetlen szám, ami megmondja: mennyire hasonlítanak egymáshoz
+  az ugyanabba a futásba tartozó elvárások.</p>
+
+  <p>Ha az ICC = 0, akkor a futáson belüli elvárások teljesen függetlenek egymástól —
+  a klaszterezés nem gond. Ha az ICC = 1, akkor egy futás minden elvárása ugyanaz —
+  a 13 elvárás valójában 1 megfigyelés.</p>
+
+  <div class="card" style="text-align:center">
+    <div class="big" style="color:var(--accent)">0,416</div>
+    <div style="font-size:14.5px;color:var(--muted);margin-top:6px">
+      a dolgozat ICC-je · a 0 és 1 közötti skálán ez <b>erős</b> klaszterezés</div>
+  </div>
+
+  <p>Értelmezés: a futások közötti különbségek 42%-a abból jön, hogy <b>futáson belül</b>
+  hasonlítanak egymásra az elvárások — nem abból, hogy a karok különböznek.</p>
+
+  <div class="callout"><b>Így mondd:</b> „Az elvárások erősen klasztereződnek a futásokon
+  belül (ICC = 0,416), ezért a független megfigyelés feltétele nem teljesül.”</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t15">
+  <div class="num">15</div>
+  <h2>Design effect — mennyi az annyi</h2>
+  <p class="hu">design effect · tervezési hatás</p>
+
+  <p class="lead">Megfordítja az ICC-t egy használható számba: hány valódi megfigyelésnek
+  felel meg a sok látszólagos.</p>
+
+  <p><code>design effect = 1 + (átlagos klaszterméret − 1) × ICC</code></p>
+  <p>A dolgozatban: <code>1 + (13,4 − 1) × 0,416 = 6,15</code></p>
+
+  <div class="demo">
+    <div class="demo-label">Ugyanaz az információ, kétféleképpen számolva</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px">
+      <div style="text-align:center;padding:16px;background:var(--bad-soft);border-radius:11px">
+        <div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--bad);font-weight:700">Amit a szám ígér</div>
+        <div class="big" style="color:var(--bad);margin:8px 0">1738</div>
+        <div style="font-size:13.5px;color:var(--muted)">független megfigyelés</div>
+      </div>
+      <div style="text-align:center;padding:16px;background:var(--good-soft);border-radius:11px">
+        <div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--good);font-weight:700">Amit valóban tud</div>
+        <div class="big" style="color:var(--good);margin:8px 0">283</div>
+        <div style="font-size:13.5px;color:var(--muted)">független megfigyelés</div>
+      </div>
+    </div>
+    <div class="readout" style="text-align:center;margin-top:14px">
+      1738 / 6,15 = 283 — <b>hatszor kevesebb</b>, mint amit a nyers darabszám sugall.
+    </div>
+  </div>
+
+  <div class="callout bad"><b>Ezért kellett újraszámolni.</b> A khi-négyzet 1738-cal számolt,
+  miközben a valódi bizonyíték 283-nak felel meg. Ezért lettek a p-értékek
+  túl kicsik.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t16">
+  <div class="num">16</div>
+  <h2>Permutációs próba</h2>
+  <p class="hu">permutation test · randomization test · újrakeverés</p>
+
+  <p class="lead">Nem képlet — kísérlet. Összekevered a karokat, és megnézed, milyen gyakran
+  jön ki ekkora különbség.</p>
+
+  <p>Ez a legszebb ötlet az egész statisztikában, mert nem kell hozzá semmilyen eloszlás
+  feltételezése. Csak annyit teszel, mintha a karok egyformák lennének, és megnézed,
+  mi történik.</p>
+
+  <div class="demo">
+    <div class="demo-label">Keverd újra a futásokat — és figyeld a hisztogramot</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <button id="perm1">1 újrakeverés</button>
+      <button id="perm100" class="ghost">100 újrakeverés</button>
+      <button id="permReset" class="ghost">Nullázás</button>
+    </div>
+    <svg id="perm" viewBox="0 0 700 260" width="700" height="260"></svg>
+    <div class="readout" id="permOut"></div>
+  </div>
+
+  <h3>Miért kezeli a klaszterezést?</h3>
+  <p>Mert a <b>futás</b> mozog, nem az egyes elvárás. Amikor újrakevered, egy egész futás
+  kerül át a másik csoportba, mind a 13 elvárásával együtt. A klaszterezés ezáltal
+  beépül a próbába, nem kell külön korrigálni.</p>
+
+  <div class="callout good"><b>A dolgozatban:</b> 637 futás, 20 000 újrakeverés, rögzített
+  véletlenszám-generátor. Ugyanaz a futás mindig ugyanazt az eredményt adja — ez a
+  reprodukálhatóság.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t17">
+  <div class="num">17</div>
+  <h2>A többszörös összevetés bajа</h2>
+  <p class="hu">multiple comparisons · többszörös összevetés</p>
+
+  <p class="lead">Minél több dolgot tesztelsz, annál biztosabb, hogy valamelyik véletlenül
+  szignifikáns lesz.</p>
+
+  <p>α = 0,05 esetén minden egyes tesztnél 5% az esély a téves riasztásra. Ha nyolcat
+  futtatsz, a téves riasztás esélye nem 5%, hanem ennél jóval több:</p>
+
+  <div class="card" style="text-align:center">
+    <div style="font:15px ui-monospace,monospace;color:var(--muted)">
+      1 − (1 − 0,05)⁸ = 33,7%
+    </div>
+    <div style="font-size:14.5px;color:var(--muted);margin-top:8px">
+      Vagyis egyharmad esély, hogy a nyolc tesztből legalább egy <b>hamis riasztás</b>.
+    </div>
+  </div>
+
+  <p>Ez nem elméleti probléma. Ha valaki 20 változót mér és mindet teszteli, átlagosan
+  egy „szignifikáns” eredménye lesz akkor is, ha semmi valódi összefüggés nincs.</p>
+
+  <div class="callout"><b>Hasonlat:</b> ha száz lottószelvényt veszel, nagyon valószínű,
+  hogy valamelyiken nyersz valamit. Ez nem azt jelenti, hogy tudsz lottózni.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t18">
+  <div class="num">18</div>
+  <h2>Holm-korrekció</h2>
+  <p class="hu">Holm–Bonferroni correction · Holm-korrekció</p>
+
+  <p class="lead">Egyszerű szabály: minél több tesztet futtatsz, annál szigorúbb küszöböt
+  használj — de nem egyformán szigorút mindenhol.</p>
+
+  <p>A legegyszerűbb megoldás a Bonferroni: oszd el az α-t a tesztek számával.
+  Nyolc tesztnél 0,05/8 = 0,00625. Probléma: ez túl szigorú, és a valóban jó eredményeket
+  is kidobja.</p>
+
+  <p>A Holm okosabb: a p-értékeket sorba rendezi, és a legkisebbet szorozza a legnagyobbal,
+  a következőt eggyel kevesebbel, és így tovább.</p>
+
+  <div class="demo">
+    <div class="demo-label">A dolgozat nyolc összevetése — kapcsold ki/be a korrekciót</div>
+    <button id="holmBtn" class="ghost">Korrekció ki/be</button>
+    <div id="holmTable" style="margin-top:14px"></div>
+  </div>
+
+  <div class="callout bad"><b>Amit ez megváltoztatott:</b> az A vs B nyers p-értéke 0,054 volt,
+  ami már önmagában sem érte el a 0,05-öt. A Holm után 0,218 lett. A többi hét
+  eredmény tartja magát — csak a leggyengébb esett ki.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t19">
+  <div class="num">19</div>
+  <h2>Szignifikáns ≠ fontos</h2>
+  <p class="hu">statistical vs practical significance</p>
+
+  <p class="lead">A két kérdés külön: látszik-e, és számít-e.</p>
+
+  <div class="flow">
+    <div><b>1. Kérdés</b>Van-e különbség?</div>
+    <div><b>2. Eszköz</b>p-érték</div>
+    <div><b>3. Válasz</b>Igen / nem tudjuk</div>
+    <div><b>4. Kérdés</b>Mekkora?</div>
+    <div><b>5. Eszköz</b>Cohen h</div>
+  </div>
+
+  <p>A dolgozat eredménye ebben a keretben:</p>
+
+  <table>
+    <tr><th>Állítás</th><th>Látszik?</th><th>Mekkora?</th></tr>
+    <tr><td>C jobb az A-nál</td><td><span class="pill y">igen, p &lt; 0,001</span></td>
+        <td>kicsi (h = 0,31)</td></tr>
+    <tr><td>E jobb az A-nál</td><td><span class="pill y">igen, p = 0,039</span></td>
+        <td>kicsi (h = 0,12)</td></tr>
+    <tr><td>B jobb az A-nál</td><td><span class="pill n">nem, p = 0,218</span></td>
+        <td>elhanyagolható (h = 0,08)</td></tr>
+    <tr><td>E más, mint B</td><td><span class="pill n">nem, p = 0,625</span></td>
+        <td>elhanyagolható (h = 0,04)</td></tr>
+  </table>
+
+  <div class="callout good"><b>A dolgozat becsületes mondata:</b> a prompt jellege statisztikailag
+  kimutatható hatással van a válaszok minőségére, de a hatások kicsik. A teljes specifikáció
+  adja a legtöbbet (71,06% → 83,74%), a kérdezés önmagában nem bizonyíthatóan javít.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="t20">
+  <div class="num">20</div>
+  <h2>Szószedet</h2>
+  <p class="hu">minden fogalom egy táblázatban</p>
+
+  <table>
+    <tr><th>Magyarul</th><th>English</th><th>Egy mondatban</th></tr>
+    <tr><td>arány</td><td>proportion</td><td>Hányan teljesítettek az összesből.</td></tr>
+    <tr><td>haranggörbe</td><td>normal distribution</td><td>A véletlen összeadódás szokásos alakja.</td></tr>
+    <tr><td>szórás</td><td>standard deviation</td><td>Mennyire szóródnak az adatok a közép körül.</td></tr>
+    <tr><td>z-érték</td><td>z-score</td><td>Hány szórással vagy a középtől.</td></tr>
+    <tr><td>p-érték</td><td>p-value</td><td>Milyen gyakran látnál ekkora különbséget, ha nem lenne valódi.</td></tr>
+    <tr><td>szignifikanciaszint</td><td>significance level (α)</td><td>Vállalt téves riasztási arány, jellemzően 5%.</td></tr>
+    <tr><td>kétoldalú</td><td>two-tailed</td><td>Mindkét irányba számol, mert nem tudod előre az irányt.</td></tr>
+    <tr><td>khi-négyzet</td><td>chi-square (χ²)</td><td>A látott és a várt eltérés négyzetösszege.</td></tr>
+    <tr><td>szabadsági fok</td><td>degrees of freedom</td><td>Hány számot választhatsz szabadon.</td></tr>
+    <tr><td>Fisher-próba</td><td>Fisher's exact test</td><td>Kis minta esetén az összes elrendezés kipróbálása.</td></tr>
+    <tr><td>hatásnagyság</td><td>effect size (Cohen h)</td><td>Mekkora a különbség, nem csak hogy látszik-e.</td></tr>
+    <tr><td>konfidenciaintervallum</td><td>confidence interval</td><td>A sáv, amiben az igazság nagy eséllyel benne van.</td></tr>
+    <tr><td>Wilson-intervallum</td><td>Wilson interval</td><td>Százalékra való sáv, ami a 0% és 100% közelében sem hazudik.</td></tr>
+    <tr><td>függetlenség</td><td>independence</td><td>A megfigyelések nem hatnak egymásra — a statisztika alapfeltétele.</td></tr>
+    <tr><td>klaszterezés</td><td>clustering</td><td>Ugyanabba a csoportba tartozó pontok együtt mozognak.</td></tr>
+    <tr><td>ICC</td><td>intraclass correlation</td><td>Mennyire hasonlítanak a csoporton belüli pontok.</td></tr>
+    <tr><td>tervezési hatás</td><td>design effect</td><td>Mennyivel kevesebb az információ, mint a darabszám.</td></tr>
+    <tr><td>effektív minta</td><td>effective sample size</td><td>A valódi megfigyelések száma a klaszterezés után.</td></tr>
+    <tr><td>permutációs próba</td><td>permutation test</td><td>Újrakevered a csoportokat, és megszámolod a nagyobb eltéréseket.</td></tr>
+    <tr><td>többszörös összevetés</td><td>multiple comparisons</td><td>Sok teszt = nagyobb esély a hamis riasztásra.</td></tr>
+    <tr><td>Holm-korrekció</td><td>Holm–Bonferroni</td><td>Szigorúbb küszöb, ha sok tesztet futtatsz.</td></tr>
+  </table>
+</section>
+
+<footer>
+  <p><b>Hogyan használd:</b> ha egy bíráló rákérdez valamire, keresd meg a szakaszt,
+  és onnan olvasd ki a mondatot. A bevezető mondatok („Így mondd:”) készen beilleszthetők
+  a dolgozatba.</p>
+  <p style="margin-top:14px">Készült a „LLM válaszainak minősége a prompt jellegétől függően”
+  című dolgozathoz · 637 értékelt futás · 26 forrás</p>
+</footer>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------------- matek */
+function erf(x){
+  const s = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const t = 1/(1+p*x);
+  const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){ return 0.5*(1+erf(z/Math.SQRT2)); }
+function twoTailP(z){ return 2*(1-normCdf(Math.abs(z))); }
+function fmtP(p){
+  // fél-felfelé kerekítés: 0,0385 -> 0,039 (a toFixed lefelé csúsztatná)
+  const d = Math.round(p * 1000 + 1e-9) / 1000;
+  if (d < 0.001) return '<0,001';
+  return d.toFixed(3).replace('.', ',');
+}
+function num(x, d){
+  return x.toFixed(d === undefined ? 1 : d).replace('.', ',');
+}
+const NS='http://www.w3.org/2000/svg';
+function el(name, attrs, parent){
+  const e=document.createElementNS(NS,name);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+/* ---------------------------------------------------------------- 1. haranggörbe (statikus) */
+(function(){
+  const svg=document.getElementById('bell1'); if(!svg) return;
+  const W=700,H=240, cx=350, base=200, amp=150, sd=70;
+  const path=[];
+  for(let px=40; px<=660; px+=2){
+    const z=(px-cx)/sd;
+    const y=base-amp*Math.exp(-0.5*z*z);
+    path.push((px===40?'M':'L')+px+','+y.toFixed(1));
+  }
+  el('path',{d:path.join(' '),fill:'none',stroke:'#3b5bdb','stroke-width':2.5},svg);
+  // szélek
+  function tail(from,to){
+    let d='M'+from+','+base;
+    for(let px=from; px<=to; px+=2){
+      const z=(px-cx)/sd;
+      d+=' L'+px+','+(base-amp*Math.exp(-0.5*z*z)).toFixed(1);
+    }
+    d+=' L'+to+','+base+' Z';
+    el('path',{d:d,fill:'#3b5bdb',opacity:.18},svg);
+  }
+  tail(40,cx-2*sd); tail(cx+2*sd,660);
+  el('line',{x1:40,y1:base,x2:660,y2:base,stroke:'#cfd4dd'},svg);
+  // tengely feliratok
+  [-3,-2,-1,0,1,2,3].forEach(z=>{
+    const px=cx+z*sd;
+    el('line',{x1:px,y1:base,x2:px,y2:base+6,stroke:'#cfd4dd'},svg);
+    const t=el('text',{x:px,y:base+22,'text-anchor':'middle','font-size':12,fill:'#5b6270'},svg);
+    t.textContent=z;
+  });
+  const lab=el('text',{x:cx+2*sd+8,y:base-40,'font-size':12.5,fill:'#3b5bdb','font-weight':600},svg);
+  lab.textContent='≈2,3% ide';
+})();
+
+/* ---------------------------------------------------------------- 2. interaktív haranggörbe */
+(function(){
+  const svg=document.getElementById('bell2'), slider=document.getElementById('zslider'),
+        out=document.getElementById('bellout');
+  if(!svg) return;
+  const W=700,H=250, cx=350, base=205, amp=155, sd=72;
+
+  function draw(z){
+    svg.innerHTML='';
+    const curve=[];
+    for(let px=40; px<=660; px+=2){
+      const zz=(px-cx)/sd;
+      curve.push((px===40?'M':'L')+px+','+(base-amp*Math.exp(-0.5*zz*zz)).toFixed(1));
+    }
+    // farok
+    function tail(from,to){
+      let d='M'+from+','+base;
+      for(let px=from; px<=to; px+=2){
+        const zz=(px-cx)/sd;
+        d+=' L'+px+','+(base-amp*Math.exp(-0.5*zz*zz)).toFixed(1);
+      }
+      d+=' L'+to+','+base+' Z';
+      el('path',{d:d,fill:'#c92a2a',opacity:.22},svg);
+    }
+    const l=cx-z*sd, r=cx+z*sd;
+    if(l>40) tail(40,l);
+    if(r<660) tail(r,660);
+    el('path',{d:curve.join(' '),fill:'none',stroke:'#3b5bdb','stroke-width':2.5},svg);
+    el('line',{x1:40,y1:base,x2:660,y2:base,stroke:'#cfd4dd'},svg);
+
+    // jelölők
+    [-l,r].forEach(px=>{
+      el('line',{x1:px,y1:base,x2:px,y2:60,stroke:'#c92a2a','stroke-dasharray':'4 4','stroke-width':1.5},svg);
+      const zz=((px-cx)/sd);
+      el('circle',{cx:px,cy:base-amp*Math.exp(-0.5*zz*zz),r:4,fill:'#c92a2a'},svg);
+    });
+    const t1=el('text',{x:cx,y:base+26,'text-anchor':'middle','font-size':12.5,fill:'#5b6270'},svg);
+    t1.textContent='0';
+    const t2=el('text',{x:r+6,y:base+26,'text-anchor':'middle','font-size':12.5,fill:'#c92a2a','font-weight':700},svg);
+    t2.textContent='z='+z.toFixed(2);
+    const t3=el('text',{x:l-6,y:base+26,'text-anchor':'middle','font-size':12.5,fill:'#c92a2a','font-weight':700},svg);
+    t3.textContent='−'+z.toFixed(2);
+
+    const p=twoTailP(z);
+    out.innerHTML = 'z = <b>'+z.toFixed(2)+'</b> &nbsp;→&nbsp; p = <b>'+fmtP(p)+'</b>'
+      + ' &nbsp;·&nbsp; ' + (p*100).toFixed(1).replace('.',',') + '% eséllyel ennyire szélsőséges vagy nagyobb';
+  }
+  slider.addEventListener('input', ()=>draw(parseFloat(slider.value)));
+  draw(parseFloat(slider.value));
+})();
+
+/* ---------------------------------------------------------------- 3. khi-négyzet */
+(function(){
+  const out=document.getElementById('chi_out'); if(!out) return;
+  const ids=['c_a','c_an','c_b','c_bn'];
+  function calc(){
+    const [a,an,b,bn]=ids.map(i=>Math.max(0,parseFloat(document.getElementById(i).value)||0));
+    const af=an-a, bf=bn-b, n=an+bn;
+    if(n===0||an===0||bn===0){ out.innerHTML=''; return; }
+    const pool=(a+b)/n;
+    const exp={a:an*pool, af:an*(1-pool), b:bn*pool, bf:bn*(1-pool)};
+    const obs={a, af, b, bf};
+    let chi=0, rows='';
+    const names={a:'A teljesült', af:'A nem', b:'B teljesült', bf:'B nem'};
+    for(const k in obs){
+      const c=(obs[k]-exp[k])**2/exp[k];
+      chi+=c;
+      rows+=`<tr><td>${names[k]}</td><td class="num2">${obs[k]}</td>
+        <td class="num2">${num(exp[k],1)}</td>
+        <td class="num2">${num(c,3)}</td>
+        <td><div style="height:14px;background:#eef1fd;border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,c/2.2*100)}%;background:#3b5bdb"></div></div></td></tr>`;
+    }
+    const z=Math.sqrt(chi), p=twoTailP(z);
+    out.innerHTML=`
+      <table><tr><th>Cella</th><th>Látott</th><th>Várt</th><th>(l−v)²/v</th><th>Hozzájárulás</th></tr>
+      ${rows}</table>
+      <div style="display:flex;gap:26px;flex-wrap:wrap;margin-top:12px;align-items:baseline">
+        <div>χ² = <b style="font-size:20px">${chi.toFixed(3).replace('.',',')}</b></div>
+        <div>z = √χ² = <b style="font-size:20px">${z.toFixed(3).replace('.',',')}</b></div>
+        <div>p = <b style="font-size:20px">${fmtP(p)}</b></div>
+      </div>`;
+  }
+  ids.forEach(i=>document.getElementById(i).addEventListener('input',calc));
+  calc();
+})();
+
+/* ---------------------------------------------------------------- 4. Cohen h skála */
+(function(){
+  const svg=document.getElementById('hscale'); if(!svg) return;
+  const x0=40, x1=660, y=95;
+  el('line',{x1:x0,y1:y,x2:x1,y2:y,stroke:'#cfd4dd','stroke-width':2},svg);
+  const bands=[[0,0.2,'#e8f6ee','elhanyagolható'],[0.2,0.5,'#fdf6e3','kicsi'],
+               [0.5,0.8,'#fdecec','közepes'],[0.8,1,'#f3e8fd','nagy']];
+  bands.forEach(([a,b,c,lab])=>{
+    const xa=x0+a*(x1-x0), xb=x0+b*(x1-x0);
+    el('rect',{x:xa,y:y-16,width:xb-xa,height:32,fill:c,rx:4},svg);
+    const t=el('text',{x:(xa+xb)/2,y:y+44,'text-anchor':'middle','font-size':12,fill:'#5b6270'},svg);
+    t.textContent=lab;
+  });
+  [0,0.2,0.5,0.8,1].forEach(v=>{
+    const x=x0+v*(x1-x0);
+    el('line',{x1:x,y1:y-22,x2:x,y2:y+22,stroke:'#9aa1ad'},svg);
+    const t=el('text',{x:x,y:y-30,'text-anchor':'middle','font-size':12,fill:'#5b6270'},svg);
+    t.textContent=v.toString().replace('.',',');
+  });
+  const vals=[[0.306,'C–A'],[0.188,'E–C'],[0.124,'A–D'],[0.118,'A–E'],[0.081,'A–B'],[0.038,'B–E']];
+  vals.forEach(([v,lab],i)=>{
+    const x=x0+v*(x1-x0);
+    el('line',{x1:x,y1:y+22,x2:x,y2:y+22+i*11,stroke:'#3b5bdb','stroke-width':1.5},svg);
+    const t=el('text',{x:x+6,y:y+32+i*11,'font-size':11.5,fill:'#3b5bdb','font-weight':600},svg);
+    t.textContent=lab+' '+v.toString().replace('.',',');
+  });
+})();
+
+/* ---------------------------------------------------------------- 5. CI */
+(function(){
+  const svg=document.getElementById('ci'), sl=document.getElementById('cislider'), out=document.getElementById('ciout');
+  if(!svg) return;
+  const W=700,H=150, x0=90, x1=650;
+  function draw(n){
+    svg.innerHTML='';
+    const p=0.7106, z=1.959963984540054;
+    const d=1+z*z/n;
+    const centre=(p+z*z/(2*n))/d;
+    const half=(z/d)*Math.sqrt(p*(1-p)/n + z*z/(4*n*n));
+    const lo=Math.max(0,centre-half), hi=Math.min(1,centre+half);
+    // naive
+    const nh=z*Math.sqrt(p*(1-p)/n);
+    const nlo=Math.max(0,p-nh), nhi=Math.min(1,p+nh);
+
+    const scale=v=>x0+v*(x1-x0);
+    el('line',{x1:x0,y1:120,x2:x1,y2:120,stroke:'#cfd4dd'},svg);
+    [0,0.25,0.5,0.75,1].forEach(v=>{
+      const x=scale(v);
+      el('line',{x1:x,y1:120,x2:x,y2:125,stroke:'#cfd4dd'},svg);
+      const t=el('text',{x:x,y:140,'text-anchor':'middle','font-size':11.5,fill:'#5b6270'},svg);
+      t.textContent=(v*100)+'%';
+    });
+    // naive sáv
+    el('line',{x1:scale(nlo),y1:55,x2:scale(nhi),y2:55,stroke:'#c92a2a','stroke-width':3,opacity:.45},svg);
+    const tn=el('text',{x:x0-8,y:59,'text-anchor':'end','font-size':11.5,fill:'#c92a2a'},svg);
+    tn.textContent='naiv';
+    // Wilson sáv
+    el('line',{x1:scale(lo),y1:85,x2:scale(hi),y2:85,stroke:'#3b5bdb','stroke-width':5,'stroke-linecap':'round'},svg);
+    el('circle',{cx:scale(p),cy:85,r:5,fill:'#16181d'},svg);
+    const tw=el('text',{x:x0-8,y:89,'text-anchor':'end','font-size':11.5,fill:'#3b5bdb','font-weight':700},svg);
+    tw.textContent='Wilson';
+
+    out.innerHTML='n = <b>'+n+'</b> &nbsp;·&nbsp; Wilson: <b>'
+      +(lo*100).toFixed(1).replace('.',',')+'–'+(hi*100).toFixed(1).replace('.',',')+'%</b>'
+      +' &nbsp;·&nbsp; szélesség '+( (hi-lo)*100 ).toFixed(1).replace('.',',')+' százalékpont';
+  }
+  sl.addEventListener('input',()=>draw(parseInt(sl.value)));
+  draw(parseInt(sl.value));
+})();
+
+/* ---------------------------------------------------------------- 6. Wilson vs naiv a széleken */
+(function(){
+  const svg=document.getElementById('wilson'), sl=document.getElementById('wslider'), out=document.getElementById('wout');
+  if(!svg) return;
+  const x0=70, x1=650;
+  function draw(k){
+    svg.innerHTML='';
+    const n=12, p=k/n, z=1.959963984540054;
+    const d=1+z*z/n;
+    const centre=(p+z*z/(2*n))/d;
+    const half=(z/d)*Math.sqrt(p*(1-p)/n + z*z/(4*n*n));
+    const lo=Math.max(0,centre-half), hi=Math.min(1,centre+half);
+    const nh=z*Math.sqrt(p*(1-p)/n);
+    const scale=v=>x0+v*(x1-x0);
+    el('line',{x1:x0,y1:100,x2:x1,y2:100,stroke:'#cfd4dd'},svg);
+    [0,0.25,0.5,0.75,1].forEach(v=>{
+      const x=scale(v);
+      el('line',{x1:x,y1:100,x2:x,y2:105,stroke:'#cfd4dd'},svg);
+      const t=el('text',{x:x,y:120,'text-anchor':'middle','font-size':11.5,fill:'#5b6270'},svg);
+      t.textContent=(v*100)+'%';
+    });
+    el('line',{x1:scale(Math.max(0,p-nh)),y1:45,x2:scale(Math.min(1,p+nh)),y2:45,stroke:'#c92a2a','stroke-width':3,opacity:.45},svg);
+    el('line',{x1:scale(lo),y1:72,x2:scale(hi),y2:72,stroke:'#3b5bdb','stroke-width':5,'stroke-linecap':'round'},svg);
+    el('circle',{cx:scale(p),cy:72,r:5,fill:'#16181d'},svg);
+    const a=el('text',{x:x0-8,y:49,'text-anchor':'end','font-size':11.5,fill:'#c92a2a'},svg);
+    a.textContent='naiv';
+    const b2=el('text',{x:x0-8,y:76,'text-anchor':'end','font-size':11.5,fill:'#3b5bdb','font-weight':700},svg);
+    b2.textContent='Wilson';
+    out.innerHTML=(k+'/'+n+' = <b>'+(p*100).toFixed(1).replace('.',',')+'%</b>')
+      +' &nbsp;·&nbsp; Wilson-sáv: <b>'+(lo*100).toFixed(1).replace('.',',')+'–'+(hi*100).toFixed(1).replace('.',',')+'%</b>'
+      + (k===n ? ' &nbsp;·&nbsp; a naiv képlet itt <b>nulla szélességű</b> sávot adna' : '');
+  }
+  sl.addEventListener('input',()=>draw(parseInt(sl.value)));
+  draw(parseInt(sl.value));
+})();
+
+/* ---------------------------------------------------------------- 7. klaszterezés */
+(function(){
+  const box=document.getElementById('cluGrid'), btn=document.getElementById('cluBtn'), out=document.getElementById('cluOut');
+  if(!box) return;
+  const RUNS=10, WANTS=13;
+  function gen(){
+    const base=Math.random()*0.5+0.25;      // futás szintű szint
+    const cells=[];
+    for(let r=0;r<RUNS;r++){
+      const lvl=Math.min(0.95,Math.max(0.05, base + (Math.random()-0.5)*0.55));
+      for(let w=0;w<WANTS;w++){
+        cells.push(Math.random() < lvl);
+      }
+    }
+    return cells;
+  }
+  function render(){
+    const cells=gen();
+    let html='<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:3px;max-width:520px">';
+    cells.forEach(ok=>{
+      html+='<div style="aspect-ratio:1;border-radius:3px;background:'
+        +(ok?'#1f8a4c':'#f0f2f6')+'"></div>';
+    });
+    html+='</div>';
+    box.innerHTML=html;
+    const met=cells.filter(Boolean).length;
+    out.innerHTML='<b>'+cells.length+'</b> zöld pont látszik, de ez csak <b>'+RUNS+'</b> futás. '
+      +'Egy futás 13 pontja együtt mozog — a sorok hasonlítanak egymásra, nem véletlenül.';
+  }
+  btn.addEventListener('click',render);
+  render();
+})();
+
+/* ---------------------------------------------------------------- 8. permutáció */
+(function(){
+  const svg=document.getElementById('perm'), out=document.getElementById('permOut');
+  if(!svg) return;
+  // futásszintű eredmények (%): A kb. 66,6 · B kb. 4 ponttal jobb, de szórással
+  const A=[62,58,71,66,74,59,68,63,70,72,64,67,69,61,73,65,60,75,66,68];
+  const B=A.map((v,i)=>v+4+((i%3)-1));
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const obs=mean(B)-mean(A);
+  let hist={}, runs=0, minD=-14, maxD=14, binW=1;
+  const x0=60,x1=660, base=215, top=40;
+
+  function bucket(d){
+    return Math.round(d/binW)*binW;
+  }
+  function draw(){
+    svg.innerHTML='';
+    // tengely
+    el('line',{x1:x0,y1:base,x2:x1,y2:base,stroke:'#cfd4dd'},svg);
+    const maxC=Math.max(1,...Object.values(hist));
+    const scaleX=d=>x0+((d-minD)/(maxD-minD))*(x1-x0);
+    for(const k in hist){
+      const c=hist[k], x=scaleX(parseFloat(k));
+      const h=(c/maxC)*(base-top);
+      el('rect',{x:x-4,y:base-h,width:8,height:h,fill:'#3b5bdb',opacity:.55,rx:2},svg);
+    }
+    // nulla
+    el('line',{x1:scaleX(0),y1:top-8,x2:scaleX(0),y2:base,stroke:'#9aa1ad','stroke-dasharray':'3 3'},svg);
+    // mért
+    el('line',{x1:scaleX(obs),y1:top-8,x2:scaleX(obs),y2:base,stroke:'#c92a2a','stroke-width':2.5},svg);
+    const t=el('text',{x:scaleX(obs),y:top-14,'text-anchor':'middle','font-size':12,fill:'#c92a2a','font-weight':700},svg);
+    t.textContent='mért +'+obs.toFixed(1);
+    const t2=el('text',{x:scaleX(0),y:base+20,'text-anchor':'middle','font-size':11.5,fill:'#5b6270'},svg);
+    t2.textContent='0';
+    const l=el('text',{x:x0-8,y:top+10,'text-anchor':'end','font-size':11.5,fill:'#5b6270'},svg);
+    l.textContent='hányszor';
+
+    const beyond=Object.entries(hist).reduce((s,[k,c])=>s+(Math.abs(parseFloat(k))>=obs-0.5?c:0),0);
+    out.innerHTML = runs===0
+      ? 'Még nincs újrakeverés. Nyomd meg a gombot.'
+      : runs+' újrakeverés · a mért különbségnél nagyobb vagy egyenlő: <b>'+beyond+'</b>'
+        +' ('+(beyond/runs*100).toFixed(0)+'%)'
+        +(runs>=100?' · ez a p-érték becslése':'');
+
+  }
+  function one(){
+    const pool=A.concat(B);
+    for(let i=pool.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [pool[i],pool[j]]=[pool[j],pool[i]];
+    }
+    const g1=pool.slice(0,A.length), g2=pool.slice(A.length);
+    const d=mean(g2)-mean(g1);
+    const k=bucket(d);
+    hist[k]=(hist[k]||0)+1;
+    runs++;
+  }
+  document.getElementById('perm1').addEventListener('click',()=>{one();draw();});
+  document.getElementById('perm100').addEventListener('click',()=>{
+    for(let i=0;i<100;i++) one();
+    draw();
+  });
+  document.getElementById('permReset').addEventListener('click',()=>{hist={};runs=0;draw();});
+  draw();
+})();
+
+/* ---------------------------------------------------------------- 9. Holm */
+(function(){
+  const box=document.getElementById('holmTable'), btn=document.getElementById('holmBtn');
+  if(!box) return;
+  const rows=[
+    {n:'A vs C', p:0.00005},
+    {n:'E vs C', p:0.00005},
+    {n:'A vs D', p:0.00295},
+    {n:'A vs E', p:0.00770},
+    {n:'A vs B', p:0.05440},
+    {n:'B vs D', p:0.20834},
+    {n:'B vs E', p:0.29484},
+    {n:'D vs E', p:0.87081},
+  ];
+  let on=true;
+  function render(){
+    const m=rows.length;
+    const sorted=[...rows].sort((a,b)=>a.p-b.p);
+    const adj={}; let prev=0;
+    sorted.forEach((r,i)=>{
+      const v=Math.min(1,(m-i)*r.p);
+      prev=Math.max(prev,v);
+      adj[r.n]=prev;
+    });
+    let html='<table><tr><th>Összevetés</th><th>nyers p</th><th>Holm p</th><th>döntés</th></tr>';
+    rows.forEach(r=>{
+      const pv = on ? adj[r.n] : r.p;
+      const sig = pv < 0.05;
+      html+=`<tr><td>${r.n}</td>
+        <td class="num2">${fmtP(r.p)}</td>
+        <td class="num2"><b>${fmtP(pv)}</b></td>
+        <td>${sig?'<span class="pill y">szign.</span>':'<span class="pill n">nem</span>'}</td></tr>`;
+    });
+    html+='</table>';
+    html+='<div class="readout">Korrekció: <b>'+(on?'BE':'KI')+'</b></div>';
+    box.innerHTML=html;
+  }
+  btn.addEventListener('click',()=>{on=!on;render();});
+  render();
+})();
+</script>
+</body>
+</html>

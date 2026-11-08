@@ -47,38 +47,93 @@
    ]
   }
  },
- "pairwise_vs_A": [
+ "clustering": {
+  "icc": 0.416,
+  "design_effect": 6.15,
+  "avg_cluster_size": 13.4,
+  "effective_n_armA": 283,
+  "method": "run-level permutation test, Holm-corrected"
+ },
+ "pairwise": [
   {
    "comparison": "A vs B",
-   "delta_pp": 3.579,
-   "chi2": 5.6103,
-   "p": 0.017854703547480078,
-   "cohens_h": 0.0805,
-   "significant": true
-  },
-  {
-   "comparison": "A vs C",
-   "delta_pp": 12.685,
-   "chi2": 80.1864,
-   "p": 3.4069584831128047e-19,
-   "cohens_h": 0.3061,
-   "significant": true
+   "delta_pp": 3.58,
+   "chi2": 5.61,
+   "p_chi2": 0.0179,
+   "p_perm": 0.0544,
+   "cohens_h": 0.081,
+   "p_holm": 0.2176,
+   "significant": false
   },
   {
    "comparison": "A vs D",
-   "delta_pp": 5.456,
-   "chi2": 13.3538,
-   "p": 0.00025789948052905065,
-   "cohens_h": 0.1242,
+   "delta_pp": 5.46,
+   "chi2": 13.35,
+   "p_chi2": 0.0003,
+   "p_perm": 0.0029,
+   "cohens_h": 0.124,
+   "p_holm": 0.0177,
    "significant": true
   },
   {
    "comparison": "A vs E",
    "delta_pp": 5.21,
-   "chi2": 11.5302,
-   "p": 0.0006847475888747126,
-   "cohens_h": 0.1184,
+   "chi2": 11.53,
+   "p_chi2": 0.0007,
+   "p_perm": 0.0077,
+   "cohens_h": 0.118,
+   "p_holm": 0.0385,
    "significant": true
+  },
+  {
+   "comparison": "A vs C",
+   "delta_pp": 12.68,
+   "chi2": 80.19,
+   "p_chi2": 0.0,
+   "p_perm": 0.0,
+   "cohens_h": 0.306,
+   "p_holm": 0.0004,
+   "significant": true
+  },
+  {
+   "comparison": "E vs C",
+   "delta_pp": 7.47,
+   "chi2": 29.15,
+   "p_chi2": 0.0,
+   "p_perm": 0.0,
+   "cohens_h": 0.188,
+   "p_holm": 0.0004,
+   "significant": true
+  },
+  {
+   "comparison": "B vs E",
+   "delta_pp": 1.63,
+   "chi2": 1.18,
+   "p_chi2": 0.2769,
+   "p_perm": 0.2948,
+   "cohens_h": 0.038,
+   "p_holm": 0.625,
+   "significant": false
+  },
+  {
+   "comparison": "B vs D",
+   "delta_pp": 1.88,
+   "chi2": 1.65,
+   "p_chi2": 0.1989,
+   "p_perm": 0.2083,
+   "cohens_h": 0.044,
+   "p_holm": 0.625,
+   "significant": false
+  },
+  {
+   "comparison": "D vs E",
+   "delta_pp": -0.25,
+   "chi2": 0.03,
+   "p_chi2": 0.868,
+   "p_perm": 0.8708,
+   "cohens_h": 0.006,
+   "p_holm": 0.8708,
+   "significant": false
   }
  ],
  "t5_w1": {
